@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:newsapp/helper/data.dart';
+import 'package:newsapp/helper/news.dart';
+import 'package:newsapp/models/article_model.dart';
 import 'package:newsapp/models/category_model.dart';
 
 class Home extends StatefulWidget {
@@ -11,11 +13,23 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<CategoryModel> categories = [];
+  List<ArticleModel> articles = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     categories = getCategories();
+    getNews();
+  }
+
+  getNews() async {
+    News news = News();
+    await news.getNews();
+    articles = news.news;
+    setState(() {
+      _loading = false;
+    });
   }
 
   @override
@@ -34,25 +48,39 @@ class _HomeState extends State<Home> {
         elevation: 0.0,
         centerTitle: true,
       ),
-      body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  return CategoryTile(
-                    imageUrl: categories[index].imageUrl,
-                    categoryName: categories[index].categoryName,
-                  );
-                },
-                itemCount: categories.length,
-                scrollDirection: Axis.horizontal,
+      body: _loading
+          ? Center(child: CircularProgressIndicator())
+          : Container(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      itemBuilder: (context, index) {
+                        return CategoryTile(
+                          imageUrl: categories[index].imageUrl,
+                          categoryName: categories[index].categoryName,
+                        );
+                      },
+                      itemCount: categories.length,
+                      scrollDirection: Axis.horizontal,
+                    ),
+                  ),
+                  Container(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        return BlogTile(
+                            imageUrl: articles[index].urlToImage,
+                            title: articles[index].title,
+                            desc: articles[index].description);
+                      },
+                      itemCount: articles.length,
+                    ),
+                  )
+                ],
               ),
-            )
-          ],
-        ),
-      ),
+            ),
     );
   }
 }
@@ -92,6 +120,28 @@ class CategoryTile extends StatelessWidget {
             )
           ],
         ),
+      ),
+    );
+  }
+}
+
+class BlogTile extends StatelessWidget {
+  final String imageUrl, title, desc;
+  const BlogTile(
+      {super.key,
+      required this.imageUrl,
+      required this.title,
+      required this.desc});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        children: [
+          Image.network(imageUrl),
+          Text(title),
+          Text(desc),
+        ],
       ),
     );
   }
