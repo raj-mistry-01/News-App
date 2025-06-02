@@ -7,7 +7,6 @@ class News {
   List<ArticleModel> news = [];
 
   Future<void> getNews() async {
-    print("yes");
     String apiurl = "";
 
     var response = await http.get(Uri.parse(apiurl));

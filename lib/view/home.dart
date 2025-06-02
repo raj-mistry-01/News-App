@@ -3,6 +3,7 @@ import 'package:newsapp/helper/data.dart';
 import 'package:newsapp/helper/news.dart';
 import 'package:newsapp/models/article_model.dart';
 import 'package:newsapp/models/category_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -126,19 +127,11 @@ class CategoryTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: Image.network(
-                imageUrl,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
                 width: 120,
                 height: 60,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 120,
-                    height: 60,
-                    color: Colors.grey[300],
-                    child: Icon(Icons.error),
-                  );
-                },
               ),
             ),
             Container(
