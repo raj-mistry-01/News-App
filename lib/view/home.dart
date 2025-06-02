@@ -24,12 +24,20 @@ class _HomeState extends State<Home> {
   }
 
   getNews() async {
-    News news = News();
-    await news.getNews();
-    articles = news.news;
-    setState(() {
-      _loading = false;
-    });
+    try {
+      News news = News();
+      await news.getNews();
+      articles = news.news;
+      print("Articles loaded: ${articles.length}"); // Debug print
+      setState(() {
+        _loading = false;
+      });
+    } catch (e) {
+      print("Error loading news: $e");
+      setState(() {
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -50,35 +58,48 @@ class _HomeState extends State<Home> {
       ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
-          : Container(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemBuilder: (context, index) {
-                        return CategoryTile(
-                          imageUrl: categories[index].imageUrl,
-                          categoryName: categories[index].categoryName,
-                        );
-                      },
-                      itemCount: categories.length,
-                      scrollDirection: Axis.horizontal,
+          : SingleChildScrollView(
+              child: Container(
+                child: Column(
+                  children: [
+                    // Categories section with fixed height
+                    SizedBox(
+                      height: 70, // Fixed height for horizontal list
+                      child: ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        itemBuilder: (context, index) {
+                          return CategoryTile(
+                            imageUrl: categories[index].imageUrl,
+                            categoryName: categories[index].categoryName,
+                          );
+                        },
+                        itemCount: categories.length,
+                        scrollDirection: Axis.horizontal,
+                      ),
                     ),
-                  ),
-                  Container(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        return BlogTile(
-                            imageUrl: articles[index].urlToImage,
-                            title: articles[index].title,
-                            desc: articles[index].description);
-                      },
-                      itemCount: articles.length,
-                    ),
-                  )
-                ],
+                    SizedBox(height: 16), // Add spacing
+                    // Articles section
+                    articles.isEmpty
+                        ? SizedBox(
+                            height: 200,
+                            child: Center(
+                              child: Text("No articles found"),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              return BlogTile(
+                                imageUrl: articles[index].urlToImage,
+                                title: articles[index].title,
+                                desc: articles[index].description,
+                              );
+                            },
+                            itemCount: articles.length,
+                          ),
+                  ],
+                ),
               ),
             ),
     );
@@ -86,9 +107,15 @@ class _HomeState extends State<Home> {
 }
 
 class CategoryTile extends StatelessWidget {
-  final categoryName, imageUrl;
-  const CategoryTile(
-      {super.key, required this.imageUrl, required this.categoryName});
+  final String categoryName;
+  final String imageUrl;
+
+  const CategoryTile({
+    super.key,
+    required this.imageUrl,
+    required this.categoryName,
+  });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -99,23 +126,36 @@ class CategoryTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: Image.network(imageUrl,
-                  width: 120, height: 60, fit: BoxFit.cover),
+              child: Image.network(
+                imageUrl,
+                width: 120,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 120,
+                    height: 60,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.error),
+                  );
+                },
+              ),
             ),
             Container(
               alignment: Alignment.center,
               width: 120,
               height: 60,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(6), // Fixed radius
                 color: Colors.black26,
               ),
               child: Text(
                 categoryName,
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             )
           ],
@@ -126,21 +166,86 @@ class CategoryTile extends StatelessWidget {
 }
 
 class BlogTile extends StatelessWidget {
-  final String imageUrl, title, desc;
-  const BlogTile(
-      {super.key,
-      required this.imageUrl,
-      required this.title,
-      required this.desc});
+  final String imageUrl;
+  final String title;
+  final String desc;
+
+  const BlogTile({
+    super.key,
+    required this.imageUrl,
+    required this.title,
+    required this.desc,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(imageUrl),
-          Text(title),
-          Text(desc),
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              imageUrl,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: double.infinity,
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.image_not_supported, size: 50),
+                      Text("Image not available"),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  desc,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

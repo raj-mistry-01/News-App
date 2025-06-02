@@ -8,14 +8,12 @@ class News {
 
   Future<void> getNews() async {
     print("yes");
-    String apiurl =
-        "https://newsapi.org/v2/everything?q=tesla&from=2025-04-30&sortBy=publishedAt&apiKey=e3dae2b9519c4ce995724d228ff00b9c";
+    String apiurl = "";
 
     var response = await http.get(Uri.parse(apiurl));
     var jsonData = jsonDecode(response.body);
     if (jsonData['status'] == 'ok') {
       jsonData['articles'].forEach((element) {
-        print(element['title']);
         if (element['urlToImage'] != null && element['description'] != null) {
           ArticleModel articleModel = ArticleModel(
             title: element['title'] ?? "",
