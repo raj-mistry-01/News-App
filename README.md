@@ -40,7 +40,7 @@ This app uses the following API to fetch news:
 - **API Name**: [NewsAPI.org](https://newsapi.org/)
 - **API Key**: _Keep your key safe and secure_
 
-*Make sure to use Your Api edit in data.dart file then only app will work.*
+*Make sure to use Your Api edit in news.dart file then only app will work.*
 
 ---
 
